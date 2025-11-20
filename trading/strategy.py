@@ -1,4 +1,32 @@
 import pandas as pd
+
+
+def analyze_signals(df: pd.DataFrame, short_span: int = 12, long_span: int = 26) -> pd.DataFrame:
+    """
+    Adds simple EMA crossover signals to a copy of the DataFrame.
+
+    Output columns:
+    - ema_short, ema_long: EMAs
+    - signal: 1 for buy (short crosses above long), -1 for sell, 0 otherwise
+
+    This is intentionally lightweight for demonstration.
+    """
+    data = df.copy()
+    data['Close'] = data['Close'].astype(float)
+
+    data['ema_short'] = data['Close'].ewm(span=short_span, adjust=False).mean()
+    data['ema_long'] = data['Close'].ewm(span=long_span, adjust=False).mean()
+
+    data['signal'] = 0
+    # when short EMA crosses above long EMA -> buy (1)
+    cross_up = (data['ema_short'] > data['ema_long']) & (data['ema_short'].shift(1) <= data['ema_long'].shift(1))
+    cross_down = (data['ema_short'] < data['ema_long']) & (data['ema_short'].shift(1) >= data['ema_long'].shift(1))
+
+    data.loc[cross_up, 'signal'] = 1
+    data.loc[cross_down, 'signal'] = -1
+
+    return data
+import pandas as pd
 import numpy as np
 
 def ema(series: pd.Series, span: int):

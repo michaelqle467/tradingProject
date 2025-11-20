@@ -1,44 +1,100 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Trading Signals</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>S&P 100 — Top 100 Visual</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
-      body { font-family: Arial, sans-serif; margin: 40px; }
-      .container { max-width: 700px; margin: auto; }
-      input, select { padding: 8px; margin: 6px 0; width: 100%; }
-      button { padding: 10px 16px; }
-      .error { color: red; }
+      body { font-family: Arial, sans-serif; margin: 20px }
+      .container { max-width: 1100px; margin: auto }
+      #chart { height: 600px }
+      table { border-collapse: collapse; width: 100% }
+      th, td { text-align:left; padding:8px; border-bottom:1px solid #ddd }
+      .controls { margin-bottom: 12px }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>Trading Signal Analyzer</h1>
-      {% if error %}
-        <p class="error">{{ error }}</p>
-      {% endif %}
-      <form action="{{ url_for('analyze') }}" method="post">
-        <label for="symbol">Ticker symbol (e.g. AAPL, BTC-USD)</label>
-        <input id="symbol" name="symbol" placeholder="AAPL" required />
+      <h1>S&amp;P 100 — Top 100 Visualization</h1>
+      <div class="controls">
+        <button id="refresh">Refresh Data</button>
+        <span id="status" style="margin-left:12px;color:#666"></span>
+      </div>
 
-        <label for="period">History period</label>
-        <select id="period" name="period">
-          <option value="1mo">1 month</option>
-          <option value="3mo">3 months</option>
-          <option value="6mo" selected>6 months</option>
-          <option value="1y">1 year</option>
-          <option value="2y">2 years</option>
-        </select>
+      <div id="chart"></div>
 
-        <label for="interval">Interval</label>
-        <select id="interval" name="interval">
-          <option value="1d" selected>1 day</option>
-          <option value="1h">1 hour</option>
-          <option value="30m">30 minutes</option>
-        </select>
-
-        <button type="submit">Analyze</button>
-      </form>
+      <h2>List</h2>
+      <div style="overflow:auto; max-height:300px">
+        <table id="list">
+          <thead><tr><th>Symbol</th><th>Name</th><th>Price</th><th>% Change</th><th>Market Cap</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
+
+    <script>
+      async function fetchData() {
+        document.getElementById('status').textContent = 'Loading...';
+        const res = await fetch('/api/top100');
+        const json = await res.json();
+        document.getElementById('status').textContent = `Loaded in ${json.elapsed_seconds.toFixed(1)}s`;
+        return json.data;
+      }
+
+      function fmtMarketCap(n) {
+        if (!n) return '-';
+        const t = n;
+        if (t >= 1e12) return (t/1e12).toFixed(2) + 'T';
+        if (t >= 1e9) return (t/1e9).toFixed(2) + 'B';
+        if (t >= 1e6) return (t/1e6).toFixed(2) + 'M';
+        return t;
+      }
+
+      function render(data) {
+        // filter out entries without pct_change or market_cap
+        const filtered = data.filter(d => d.pct_change !== null && d.market_cap !== null);
+
+        const x = filtered.map(d => d.pct_change);
+        const y = filtered.map(d => d.market_cap);
+        const size = filtered.map(d => Math.max(6, Math.sqrt(d.market_cap) / 1000));
+        const text = filtered.map(d => `${d.symbol} - ${d.name}\n${d.pct_change.toFixed(2)}%`);
+
+        const trace = {
+          x, y, text, mode: 'markers', type: 'scatter',
+          marker: { size, sizemode: 'area', color: x, colorscale: 'RdYlGn', reversescale: true, colorbar: { title: '% change' } }
+        };
+
+        const layout = {
+          title: '% change vs Market Cap (S&P 100)',
+          xaxis: { title: '% change' },
+          yaxis: { title: 'Market Cap (USD)', type: 'log' },
+          height: 600
+        };
+
+        Plotly.newPlot('chart', [trace], layout, {responsive: true});
+
+        // fill table
+        const tbody = document.querySelector('#list tbody');
+        tbody.innerHTML = '';
+        for (const d of data) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${d.symbol}</td><td>${d.name || ''}</td><td>${d.price ? d.price.toFixed(2) : '-'}</td><td>${d.pct_change !== null ? d.pct_change.toFixed(2)+'%' : '-'}</td><td>${fmtMarketCap(d.market_cap)}</td>`;
+          tbody.appendChild(tr);
+        }
+      }
+
+      document.getElementById('refresh').addEventListener('click', async () => {
+        const data = await fetchData();
+        render(data);
+      });
+
+      // initial load
+      (async () => {
+        const data = await fetchData();
+        render(data);
+      })();
+    </script>
   </body>
 </html>
+

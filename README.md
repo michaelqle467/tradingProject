@@ -1,64 +1,48 @@
-# TradingProject
+# tradingProject (fresh scaffold)
 
-A simple Python web app (Flask) that fetches historical price data (via yfinance), runs a basic trading strategy (EMA crossover with RSI filter), and visualizes buy/sell signals on an interactive Plotly candlestick chart.
+This repository contains a minimal Flask-based trading demo that fetches OHLCV data with `yfinance`, applies a simple EMA-crossover trading signal, and visualizes results with Plotly.
 
-Features
-- Enter a ticker symbol and timeframe on the website
-- Fetch historical OHLCV using yfinance
-- Strategy: EMA crossover (short vs long) with RSI confirmation
-- Interactive Plotly chart that marks buy and sell signals
-- Table of detected buy/sell signals and basic position performance
+This reset provides a clean, runnable scaffold for Windows development.
 
-How to run locally
+Quick start (PowerShell)
 
-1. Prerequisites
-   - Python 3.10 or later
-   - Git (if you plan to clone/push)
-   - (Optional) Virtual environment tool (venv)
+1. From the repository root (where `app.py` is):
 
-2. Clone the repo (if not already):
-   git clone https://github.com/michaelqle467/tradingProject.git
-   cd tradingProject
+```powershell
+python -m venv .venv
+# If activation is blocked, allow scripts for current user (one-time):
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+.\.venv\Scripts\Activate.ps1
 
-3. Create and activate a virtual environment
-   # Linux / macOS
-   python -m venv venv
-   source venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 
-   # Windows (PowerShell)
-   python -m venv venv
-   .\\venv\\Scripts\\Activate.ps1
+# Run the development server
+python app.py
+```
 
-   # Windows (cmd.exe)
-   python -m venv venv
-   venv\\Scripts\\activate
+2. Alternative: use the provided PowerShell launcher `run.ps1` (after creating the venv once):
 
-4. Install dependencies
-   pip install -r requirements.txt
+```powershell
+.\run.ps1
+```
 
-5. Run the app
-   # Option A: direct run (development)
-   python app.py
-   # or, with Flask env var:
-   export FLASK_APP=app.py       # macOS/Linux
-   set FLASK_APP=app.py          # Windows (cmd)
-   flask run
+3. Production-like server on Windows (optional):
 
-   The app will be available at http://127.0.0.1:5000/
+```powershell
+pip install waitress
+waitress-serve --listen=*:8000 app:app
+```
 
-6. Usage
-   - Open the web UI.
-   - Enter a ticker symbol (e.g., AAPL or BTC-USD), choose a history period and interval, then click Analyze.
-   - The app fetches historical data, runs the EMA crossover + RSI filter strategy, and displays buy/sell markers on a Plotly candlestick chart along with a signals table.
+Notes
+- `gunicorn` is not supported on native Windows; `waitress` is recommended for local Windows hosting.
+- The demo is educational only and not financial advice.
 
-Notes & next steps
-- This is an educational example and not financial advice. Backtest thoroughly before using real capital.
-- You can extend the project by adding:
-  - A backtesting engine to compute returns, drawdowns, and performance metrics
-  - Storage (database) to save queries and results
-  - Additional indicators and strategy parameters exposed via the UI
-  - Integration with broker APIs for paper/live trading (requires API keys)
-  - Deployment instructions (Docker, Gunicorn, hosting)
+Files of interest
+- `app.py` — Flask application
+- `trading/strategy.py` — simple EMA crossover signal generator
+- `templates/index.html` and `templates/results.html` — UI
+- `requirements.txt` — Python dependencies
+- `run.ps1` / `run.bat` — convenience start scripts
 
-License
-- Add your preferred license file if you want this code to be open source (e.g., MIT).
+If you want a different stack or extra features (backtesting, DB, Docker), tell me which direction and I'll scaffold that next.
