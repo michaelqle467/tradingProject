@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Trading Signals</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 40px; }
+      .container { max-width: 700px; margin: auto; }
+      input, select { padding: 8px; margin: 6px 0; width: 100%; }
+      button { padding: 10px 16px; }
+      .error { color: red; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Trading Signal Analyzer</h1>
+      {% if error %}
+        <p class="error">{{ error }}</p>
+      {% endif %}
+      <form action="{{ url_for('analyze') }}" method="post">
+        <label for="symbol">Ticker symbol (e.g. AAPL, BTC-USD)</label>
+        <input id="symbol" name="symbol" placeholder="AAPL" required />
+
+        <label for="period">History period</label>
+        <select id="period" name="period">
+          <option value="1mo">1 month</option>
+          <option value="3mo">3 months</option>
+          <option value="6mo" selected>6 months</option>
+          <option value="1y">1 year</option>
+          <option value="2y">2 years</option>
+        </select>
+
+        <label for="interval">Interval</label>
+        <select id="interval" name="interval">
+          <option value="1d" selected>1 day</option>
+          <option value="1h">1 hour</option>
+          <option value="30m">30 minutes</option>
+        </select>
+
+        <button type="submit">Analyze</button>
+      </form>
+    </div>
+  </body>
+</html>

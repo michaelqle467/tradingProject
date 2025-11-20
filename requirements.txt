@@ -1,0 +1,6 @@
+Flask>=2.0
+yfinance>=0.2.18
+pandas>=1.5
+numpy>=1.23
+plotly>=5.0
+gunicorn>=20.1.0
